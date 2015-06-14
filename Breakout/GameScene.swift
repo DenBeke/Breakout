@@ -14,7 +14,12 @@ let PaddleCategoryName = "paddle"
 let BlockCategoryName = "block"
 let BlockNodeCategoryName = "blockNode"
 
-class GameScene: SKScene {
+let BallCategory   : UInt32 = 0x1 << 0 // 00000000000000000000000000000001
+let BottomCategory : UInt32 = 0x1 << 1 // 00000000000000000000000000000010
+let BlockCategory  : UInt32 = 0x1 << 2 // 00000000000000000000000000000100
+let PaddleCategory : UInt32 = 0x1 << 3 // 00000000000000000000000000001000
+
+class GameScene: SKScene, SKPhysicsContactDelegate {
     
     var isFingerOnPaddle = false
     let motionManager: CMMotionManager = CMMotionManager()
@@ -38,11 +43,26 @@ class GameScene: SKScene {
         self.physicsBody = borderBody
         
         physicsWorld.gravity = CGVectorMake(0, 0)
+        physicsWorld.contactDelegate = self
         
         let ball = childNodeWithName(BallCategoryName) as! SKSpriteNode
         ball.physicsBody!.applyImpulse(CGVectorMake(10, -10))
         
-        motionManager.startAccelerometerUpdates()
+        let bottomRect = CGRectMake(frame.origin.x, frame.origin.y, frame.size.width, 1)
+        let bottom = SKNode()
+        bottom.physicsBody = SKPhysicsBody(edgeLoopFromRect: bottomRect)
+        addChild(bottom)
+        
+        let paddle = childNodeWithName(PaddleCategoryName) as! SKSpriteNode
+        
+        bottom.physicsBody!.categoryBitMask = BottomCategory
+        ball.physicsBody!.categoryBitMask = BallCategory
+        paddle.physicsBody!.categoryBitMask = PaddleCategory
+
+        ball.physicsBody!.contactTestBitMask = BottomCategory
+        
+        //motionManager.startAccelerometerUpdates()
+        
     }
     
     
@@ -88,6 +108,34 @@ class GameScene: SKScene {
     override func touchesEnded(touches: Set<UITouch>, withEvent event: UIEvent?) {
         // Removed finger from paddle
         isFingerOnPaddle = false
+    }
+    
+    
+    func didBeginContact(contact: SKPhysicsContact) {
+        // Create local variables for two physics bodies
+        var firstBody: SKPhysicsBody
+        var secondBody: SKPhysicsBody
+        
+        // Assign the two physics bodies so that the one with the lower category is always stored in firstBody
+        if contact.bodyA.categoryBitMask < contact.bodyB.categoryBitMask {
+            firstBody = contact.bodyA
+            secondBody = contact.bodyB
+        } else {
+            firstBody = contact.bodyB
+            secondBody = contact.bodyA
+        }
+        
+        // react to the contact between ball and bottom
+        if firstBody.categoryBitMask == BallCategory && secondBody.categoryBitMask == BottomCategory {
+            // Display of Game Over Scene
+            if let mainView = view {
+                let gameOverScene = GameOverScene(fileNamed: "GameOverScene")
+                gameOverScene!.size = size
+                gameOverScene!.scaleMode = scaleMode
+                gameOverScene!.gameWon = false
+                mainView.presentScene(gameOverScene)
+            }
+        }
     }
     
     
