@@ -47,7 +47,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         physicsWorld.contactDelegate = self
         
         let ball = childNodeWithName(BallCategoryName) as! SKSpriteNode
-        ball.physicsBody!.applyImpulse(CGVectorMake(10, -10))
+        ball.physicsBody!.applyImpulse(CGVectorMake(0, -10))
         
         let bottomRect = CGRectMake(frame.origin.x, frame.origin.y, frame.size.width, 1)
         let bottom = SKNode()
@@ -69,29 +69,40 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         
         // Blocks/Bricks
         // 1. Store some useful constants
-        let numberOfBlocks = 6
+        let numberOfBlocksX = 12
+        let numberOfBlocksY = 4
         
         let blockWidth = SKSpriteNode(imageNamed: "Block.png").size.width
-        let totalBlocksWidth = blockWidth * CGFloat(numberOfBlocks)
+        let blockHeight = SKSpriteNode(imageNamed: "Block.png").size.height
+        let totalBlocksWidth = blockWidth * CGFloat(numberOfBlocksX)
         
         let padding: CGFloat = 10.0
-        let totalPadding = padding * CGFloat(numberOfBlocks - 1)
+        let totalPadding = padding * CGFloat(numberOfBlocksX - 1)
+        
+        // Calculate top row
+        let yStart = CGRectGetHeight(frame) * 0.87
+        let yRowOffset = blockHeight + padding
         
         // 2. Calculate the xOffset
         let xOffset = (CGRectGetWidth(frame) - totalBlocksWidth - totalPadding) / 2
         
         // 3. Create the blocks and add them to the scene
-        for i in 0..<numberOfBlocks {
-            let block = SKSpriteNode(imageNamed: "Block.png")
-            block.position = CGPointMake(xOffset + CGFloat(CGFloat(i) + 0.5)*blockWidth + CGFloat(i-1)*padding, CGRectGetHeight(frame) * 0.8)
-            block.physicsBody = SKPhysicsBody(rectangleOfSize: block.frame.size)
-            block.physicsBody!.allowsRotation = false
-            block.physicsBody!.friction = 0.0
-            block.physicsBody!.affectedByGravity = false
-            block.physicsBody!.dynamic = false
-            block.name = BlockCategoryName
-            block.physicsBody!.categoryBitMask = BlockCategory
-            addChild(block)
+        for j in 0..<numberOfBlocksY {
+            
+            let y = yStart - yRowOffset*CGFloat(j)
+            
+            for i in 0..<numberOfBlocksX {
+                let block = SKSpriteNode(imageNamed: "Block.png")
+                block.position = CGPointMake(xOffset + CGFloat(CGFloat(i) + 0.5)*blockWidth + CGFloat(i-1)*padding, y)
+                block.physicsBody = SKPhysicsBody(rectangleOfSize: block.frame.size)
+                block.physicsBody!.allowsRotation = false
+                block.physicsBody!.friction = 0.0
+                block.physicsBody!.affectedByGravity = false
+                block.physicsBody!.dynamic = false
+                block.name = BlockCategoryName
+                block.physicsBody!.categoryBitMask = BlockCategory
+                addChild(block)
+            }
         }
         
     }
@@ -144,7 +155,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     override func update(currentTime: NSTimeInterval) {
         let ball = self.childNodeWithName(BallCategoryName) as! SKSpriteNode
         
-        let maxSpeed: CGFloat = 1000.0
+        let maxSpeed: CGFloat = 800.0
         let speed = sqrt(ball.physicsBody!.velocity.dx * ball.physicsBody!.velocity.dx + ball.physicsBody!.velocity.dy * ball.physicsBody!.velocity.dy)
         
         if speed > maxSpeed {

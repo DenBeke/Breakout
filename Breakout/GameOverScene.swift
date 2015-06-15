@@ -12,9 +12,10 @@ let GameOverLabelCategoryName = "gameOverLabel"
 
 class GameOverScene: SKScene {
     var gameWon : Bool = false {
-        // 1.
         didSet {
+            let titleLabel = childNodeWithName("titleLabel") as! SKLabelNode
             let gameOverLabel = childNodeWithName(GameOverLabelCategoryName) as! SKLabelNode
+            titleLabel.text = ""
             gameOverLabel.text = gameWon ? "Game Won" : "Game Over"
         }
     }
