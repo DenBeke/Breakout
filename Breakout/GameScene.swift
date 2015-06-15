@@ -18,6 +18,7 @@ let BallCategory   : UInt32 = 0x1 << 0 // 00000000000000000000000000000001
 let BottomCategory : UInt32 = 0x1 << 1 // 00000000000000000000000000000010
 let BlockCategory  : UInt32 = 0x1 << 2 // 00000000000000000000000000000100
 let PaddleCategory : UInt32 = 0x1 << 3 // 00000000000000000000000000001000
+let BorderCategory  : UInt32 = 0x1 << 4 // 00000000000000000000000000010000
 
 class GameScene: SKScene, SKPhysicsContactDelegate {
     
@@ -58,8 +59,9 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         bottom.physicsBody!.categoryBitMask = BottomCategory
         ball.physicsBody!.categoryBitMask = BallCategory
         paddle.physicsBody!.categoryBitMask = PaddleCategory
+        borderBody.categoryBitMask = BorderCategory
 
-        ball.physicsBody!.contactTestBitMask = BottomCategory | BlockCategory | PaddleCategory
+        ball.physicsBody!.contactTestBitMask = BottomCategory | BlockCategory | PaddleCategory | BorderCategory
         
         //motionManager.startAccelerometerUpdates()
         
@@ -213,6 +215,24 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
                     gameOverScene!.scaleMode = scaleMode
                     gameOverScene!.gameWon = true
                     mainView.presentScene(gameOverScene)
+                }
+            }
+        }
+        
+        // check contact with border
+        if firstBody.categoryBitMask == BallCategory && secondBody.categoryBitMask == BorderCategory {
+            let currentVector = contact.contactNormal
+            //print("Bonk \(currentVector.dx), \(currentVector.dy)")
+            let currentImpact = contact.collisionImpulse
+            //print("Power: \(currentImpact)")
+            if currentImpact <= 5.0 && currentImpact > 0 {
+                //print("Impulse power, Mr Sulu")
+                if currentVector.dx == 0 { // only the top
+                    firstBody.applyImpulse(CGVector(dx: 0, dy: -1))
+                } else if currentVector.dy == 0 { // dx is -1 on the right wall, 1 on the left.
+                    let dx = currentVector.dx
+                    //print("Applying impulse with dx = \(dx)")
+                    firstBody.applyImpulse(CGVector(dx: dx, dy: 0))
                 }
             }
         }
