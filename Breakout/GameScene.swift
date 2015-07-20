@@ -47,7 +47,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         physicsWorld.contactDelegate = self
         
         let ball = childNodeWithName(BallCategoryName) as! SKSpriteNode
-        ball.physicsBody!.applyImpulse(CGVectorMake(0, -10))
+        //ball.physicsBody!.applyImpulse(CGVectorMake(0, -10))
         
         let bottomRect = CGRectMake(frame.origin.x, frame.origin.y, frame.size.width, 1)
         let bottom = SKNode()
@@ -63,7 +63,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
 
         ball.physicsBody!.contactTestBitMask = BottomCategory | BlockCategory | PaddleCategory | BorderCategory
         
-        //motionManager.startAccelerometerUpdates()
+        motionManager.startAccelerometerUpdates()
         
         
         
@@ -143,6 +143,29 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             
             // Update paddle position
             paddle.position = CGPointMake(paddleX, paddle.position.y)
+       }
+    }
+    
+    
+    func processUserMotionForUpdate(currentTime: CFTimeInterval) {
+        
+        // Get node for paddle
+        let paddle = childNodeWithName(PaddleCategoryName) as! SKSpriteNode
+        
+        // Get MotionManager data
+        if let data = motionManager.accelerometerData {
+            
+            // Only get use data if it is "tilt enough"
+            if (fabs(data.acceleration.y) > 0.05) {
+                
+                //paddle.physicsBody!.applyForce(CGVectorMake(40.0 * CGFloat(data.acceleration.x), 0))
+                var paddleX = paddle.position.x + CGFloat(data.acceleration.y * 40)
+                paddleX = max(paddleX, paddle.size.width/2)
+                paddleX = min(paddleX, size.width - paddle.size.width/2)
+                paddle.position = CGPointMake(paddleX, paddle.position.y)
+
+                
+            }
         }
     }
     
@@ -164,6 +187,9 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         else {
             ball.physicsBody!.linearDamping = 0.0
         }
+        
+        // Update motion
+        processUserMotionForUpdate(currentTime)
     }
     
     
